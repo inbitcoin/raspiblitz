@@ -632,6 +632,9 @@ sudo bash -c "echo 'net.core.wmem_max = 1048576' >> /etc/sysctl.conf"
 sudo apt-get -y install fzf
 sudo bash -c "echo 'source /usr/share/doc/fzf/examples/key-bindings.bash' >> /home/admin/.bashrc"
 
+# install Lighter dependencies
+sudo apt-get -y install libscrypt0
+
 # *** SHELL SCRIPTS AND ASSETS
 
 # move files from gitclone
