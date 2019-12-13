@@ -1,0 +1,15 @@
+# RaspiBlitz: systemd unit for lighter
+
+[Unit]
+Description=Lighter Daemon
+Wants=lnd.service
+After=lnd.service
+
+[Service]
+User=bitcoin
+Type=simple
+ExecStart=/usr/local/bin/lighter --lighterdir /home/admin/.lighter
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

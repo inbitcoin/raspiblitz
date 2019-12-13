@@ -484,6 +484,24 @@ Read an Intro-Tutorial to RTL: https://medium.com/@suheb.khan/how-to-ride-the-li
 
 Feedback is welcome by the RTL programmer: https://github.com/ShahanaFarooqui/RTL
 
+##### Lighter
+
+[Lighter](https://gitlab.com/inbitcoin/lighter) is a LN node wrapper
+that abstracts differences between implementations.
+Currently, RaspiBlitz supports only LND as LN node but in the future
+it could leverage from Lighter to support other nodes.
+
+It provides `cliter`, a CLI that you can call to handle your lightning
+operations commanding lighter.
+
+Once activated, in RaspiBlitz main menu will appear a _LIGHTER_ option that
+will open a dedicated menu that will allow you to eaisly unlock or lock lighter
+and start its pairing procedure.
+
+Finally suggest to give a try to
+[Globular](https://gitlab.com/inbitcoin/globular),
+an demo wallet for Android which can be paired with lighter.
+
 ##### LND Auto-Unlock
 
 The RaspiBlitz will automatically unlock the LND wallet on every start.

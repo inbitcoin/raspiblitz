@@ -16,6 +16,7 @@ if [ ${#autoNatDiscovery} -eq 0 ]; then autoNatDiscovery="off"; fi
 if [ ${#networkUPnP} -eq 0 ]; then networkUPnP="off"; fi
 if [ ${#touchscreen} -eq 0 ]; then touchscreen=0; fi
 if [ ${#lcdrotate} -eq 0 ]; then lcdrotate=0; fi
+if [ ${#lighter} -eq 0 ]; then lighter="off"; fi
 
 echo "map chain to on/off"
 chainValue="off"
@@ -24,20 +25,20 @@ if [ "${chain}" = "test" ]; then chainValue="on"; fi
 echo "map domain to on/off"
 domainValue="off"
 dynDomainMenu='DynamicDNS'
-if [ ${#dynDomain} -gt 0 ]; then 
+if [ ${#dynDomain} -gt 0 ]; then
   domainValue="on"
   dynDomainMenu="${dynDomain}"
 fi
 
 echo "map lcdrotate to on/off"
 lcdrotateMenu='off'
-if [ ${lcdrotate} -gt 0 ]; then 
+if [ ${lcdrotate} -gt 0 ]; then
   lcdrotateMenu='on'
 fi
 
 echo "map touchscreen to on/off"
 tochscreenMenu='off'
-if [ ${touchscreen} -gt 0 ]; then 
+if [ ${touchscreen} -gt 0 ]; then
   tochscreenMenu='on'
 fi
 
@@ -61,6 +62,7 @@ CHOICES=$(dialog --title ' Additional Services ' --checklist ' use spacebar to a
 5 'RTL Webinterface' ${rtlWebinterface} \
 b 'BTC-RPC-Explorer' ${BTCRPCexplorer} \
 6 'LND Auto-Unlock' ${autoUnlock} \
+l 'Lighter' ${lighter} \
 9 'Touchscreen' ${tochscreenMenu} \
 r 'LCD Rotate' ${lcdrotateMenu} \
 2>&1 >/dev/tty)
@@ -75,7 +77,8 @@ b 'BTC-RPC-Explorer' ${BTCRPCexplorer} \
 6 'LND Auto-Unlock' ${autoUnlock} \
 7 'BTC UPnP (AutoNAT)' ${networkUPnP} \
 8 'LND UPnP (AutoNAT)' ${autoNatDiscovery} \
-9 'Touchscreen' ${tochscreenMenu} \
+l 'Lighter' ${lighter} \
+10 'Touchscreen' ${tochscreenMenu} \
 r 'LCD Rotate' ${lcdrotateMenu} \
 2>&1 >/dev/tty)
 fi
@@ -102,7 +105,7 @@ if [ "${autoPilot}" != "${choice}" ]; then
   anychange=1
   sudo /home/admin/config.scripts/lnd.autopilot.sh ${choice}
   needsReboot=1
-else 
+else
   echo "Autopilot Setting unchanged."
 fi
 
@@ -128,13 +131,13 @@ if [ "${chain}" != "${choice}" ]; then
           echo "Creating a new LND Wallet for ${network}/${choice}net"
           echo "****************************************************************************"
           echo "A) For 'Wallet Password' use your PASSWORD C --> !! minimum 8 characters !!"
-          echo "B) Answere 'n' because you dont have a 'cipher seed mnemonic' (24 words) yet" 
+          echo "B) Answere 'n' because you dont have a 'cipher seed mnemonic' (24 words) yet"
           echo "C) For 'passphrase' to encrypt your 'cipher seed' use PASSWORD D (optional)"
           echo "****************************************************************************"
           sudo -u bitcoin /usr/local/bin/lncli --chain=${network} --network=${chain}net create 2>error.out
           error=`sudo cat error.out`
           if [ ${#error} -eq 0 ]; then
-            sleep 2  
+            sleep 2
             # WIN
             tryAgain=0
             echo "!!! Make sure to write down the 24 words (cipher seed mnemonic) !!!"
@@ -172,10 +175,10 @@ if [ "${chain}" != "${choice}" ]; then
     sudo mkdir /home/admin/.lnd/data/chain/${network}/${choice}net
     sudo cp /home/bitcoin/.lnd/data/chain/${network}/${choice}net/admin.macaroon /home/admin/.lnd/data/chain/${network}/${choice}net
     sudo chown -R admin:admin /home/admin/.lnd/
-    
+
     needsReboot=1
   fi
-else 
+else
   echo "Testnet Setting unchanged."
 fi
 
@@ -250,7 +253,7 @@ Please keep in mind that thru your LND node id & your previous IP history with y
 " 16 76
 
     # make sure AutoNAT & UPnP is off
-    /home/admin/config.scripts/lnd.autonat.sh off 
+    /home/admin/config.scripts/lnd.autonat.sh off
     /home/admin/config.scripts/network.upnp.sh off
   fi
 
@@ -259,7 +262,7 @@ Please keep in mind that thru your LND node id & your previous IP history with y
   sudo /home/admin/config.scripts/internet.tor.sh ${choice}
   needsReboot=1
 
-else 
+else
   echo "TOR Setting unchanged."
 fi
 
@@ -282,7 +285,7 @@ if [ "${rtlWebinterface}" != "${choice}" ]; then
         l4=""
         l5="The Hidden Service address to be used in the Tor Browser:"
         l6="${TOR_ADDRESS}"
-        dialog --title 'OK' --msgbox "${l1}\n${l2}\n${l3}\n${l4}\n${l5}\n${l6}" 11 66        
+        dialog --title 'OK' --msgbox "${l1}\n${l2}\n${l3}\n${l4}\n${l5}\n${l6}" 11 66
       else
         l1="Open the following URL in your local web browser"
         l2="and login with your PASSWORD B."
@@ -299,6 +302,30 @@ if [ "${rtlWebinterface}" != "${choice}" ]; then
   needsReboot=0
 else
   echo "RTL Webinterface Setting unchanged."
+fi
+
+# Lighter process choice
+choice="off"; check=$(echo "${CHOICES}" | grep -c "l")
+if [ ${check} -eq 1 ]; then choice="on"; fi
+if [ "${lighter}" != "${choice}" ]; then
+  echo "Lighter Setting changed .."
+  anychange=1
+  /home/admin/config.scripts/bonus.lighter.sh ${choice}
+  errorOnInstall=$?
+  if [ "${choice}" =  "on" ]; then
+    if [ ${errorOnInstall} -eq 0 ]; then
+      message="Running Lighter"
+      dialog --title 'OK' --msgbox "${message}\n" 11 65
+    else
+      l1="!!! FAIL on Lighter install !!!"
+      l2="Try manual install on terminal after reboot with:"
+      l3="/home/admin/config.scripts/bonus.lighter.sh on"
+      dialog --title 'FAIL' --msgbox "${l1}\n${l2}\n${l3}" 10 65
+    fi
+  fi
+  needsReboot=0
+else
+  echo "Lighter Setting unchanged."
 fi
 
 # BTC-RPC-Explorer process choice
@@ -324,7 +351,7 @@ if [ "${BTCRPCexplorer}" != "${choice}" ]; then
         l8=""
         l9="The Hidden Service address to be used in the Tor Browser:"
         l10="${TOR_ADDRESS}"
-        dialog --title 'OK' --msgbox "${l1}\n${l2}\n${l3}\n${l4}\n${l5}\n${l6}\n${l7}\n${l8}\n${l9}\n${l10}" 15 75        
+        dialog --title 'OK' --msgbox "${l1}\n${l2}\n${l3}\n${l4}\n${l5}\n${l6}\n${l7}\n${l8}\n${l9}\n${l10}" 15 75
       else
         l1="The txindex needs to be created before BTC-RPC-Explorer can be active"
         l2="Takes ~7 h on a RPi4 with SSD. Monitor with:"
@@ -357,7 +384,7 @@ if [ "${autoUnlock}" != "${choice}" ]; then
   l1="AUTO-UNLOCK IS NOW OFF"
   if [ "${choice}" = "on" ]; then
     l1="AUTO-UNLOCK IS NOW ACTIVE"
-  fi  
+  fi
   l2="-------------------------"
   l3="mobile/external wallets may need reconnect"
   l4="possible change in macaroon / TLS cert"
