@@ -53,16 +53,21 @@ OPTIONS+=(INFO "RaspiBlitz Status Screen" \
 # dont offer lnbalance/lnchannels on testnet
 if [ "${chain}" = "main" ]; then
   OPTIONS+=(lnbalance "Detailed Wallet Balances" \
-  lnchannels "Lightning Channel List")  
+  lnchannels "Lightning Channel List")
+fi
+
+lighter_active=$(sudo systemctl is-active lighter)
+if [ "$?" -eq 0 ]; then
+    OPTIONS+=(LIGHTER "Lighter options")
 fi
 
 # Depending Options
 openChannels=$(sudo -u bitcoin /usr/local/bin/lncli --chain=${network} --network=${chain}net listchannels 2>/dev/null | jq '.[] | length')
 if [ ${#openChannels} -gt 0 ] && [ ${openChannels} -gt 0 ]; then
-  OPTIONS+=(CLOSEALL "Close all open Channels")  
+  OPTIONS+=(CLOSEALL "Close all open Channels")
 fi
 if [ "${runBehindTor}" == "on" ]; then
-  OPTIONS+=(NYX "Monitor TOR")  
+  OPTIONS+=(NYX "Monitor TOR")
 fi
 
 # final Options
@@ -192,6 +197,12 @@ case $CHOICE in
               ./00mainMenu.sh
             fi
             ;;
+        LIGHTER)
+            ./CClighter.sh
+            echo "Press ENTER to return to main menu."
+            read key
+            ./00mainMenu.sh
+            ;;
         REPAIR)
             ./98repairMenu.sh
             ./00mainMenu.sh
@@ -232,10 +243,10 @@ case $CHOICE in
             sudo ./XXcleanHDD.sh
             sudo shutdown -r now
             exit 0
-            ;;   
+            ;;
         UPDATE)
             /home/admin/99checkUpdate.sh
             ./00mainMenu.sh
             exit 0
-            ;;   
+            ;;
 esac
